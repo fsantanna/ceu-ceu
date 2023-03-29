@@ -1,46 +1,70 @@
 println(...)
 
+pass :Tk
+
 val f-name = ...[1]
 val f = `:pointer fopen($f-name.Dyn->Ncast.Vector.buf, "r")`
 defer {
     `fclose($f.Pointer);`
 }
 
-coro co-char () {
-    yield()
-    loop {
-        val n = `:number fgetc($f.Pointer)`
-    } until n == `:number EOF` {
-        val c = `:char $n.Number`
-        yield(c)
+val tks =
+func tks-read () {
+}
+
+do :unnest {
+    var i   = 0
+    var N   = 0
+    val buf = [nil,nil]
+
+    func f-read () {
+        if N > 0 {
+            val a = buf[i]
+            set i = (i + 1) % 2
+            set N = N - 1
+            a
+        } else {
+            val b = `:number fgetc($f.Pointer)`
+            if b == `:number EOF` {
+                nil
+            } else {
+                `:char $b.Number`
+            }
+        }
+    }
+
+    func f-unread (c) {
+        assert(N < 2)
+        set buf[i] = c
+        set i = (i + 1) % 2
+        set N = N + 1
     }
 }
 
-coro co-skip (src) {
+val co-skip = spawn coro {
     yield()
-    loop in iter(src), c {
+    loop in iter(f-read), c {
         ifs c {
             in? [' ','\t','\n'] -> {}
+            == ';' -> {
+                val c2 = f-read()
+            }
             else -> yield(c)
         }
     }
 }
 
-coro co-token (src) {
+val co-token = spawn coro {
     yield()
-    loop in iter(src), c {
+    loop in iter(co-skip), c {
         ifs c {
-            in? ['}','(',')','[',']',',','$'] -> yield(:Fix [c, []])
+            in? ['}','(',')','[',']',',','$'] -> yield(:Tk.Fix [c, []])
             else -> yield(c)
         }
     }
 }
 
-val x-char  = spawn co-char  ()
-val x-skip  = spawn co-skip  (x-char)
-val x-token = spawn co-token (x-skip)
-
-loop in iter(x-token), tk {
+loop in iter(co-token), tk {
     println(tk)
 }
 
