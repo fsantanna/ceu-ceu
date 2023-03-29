@@ -1,0 +1,57 @@
+println(...)
+
+val f-name = ...[1]
+val f = `:pointer fopen($f-name.Dyn->Ncast.Vector.buf, "r")`
+defer {
+    `fclose($f.Pointer);`
+}
+
+coro co-char () {
+    yield()
+    loop {
+        val n = `:number fgetc($f.Pointer)`
+    } until n == `:number EOF` {
+        val c = `:char $n.Number`
+        yield(c)
+    }
+}
+
+coro co-skip (src) {
+    yield()
+    loop in iter(src), c {
+        ifs c {
+            in? [' ','\t','\n'] -> {}
+            else -> yield(c)
+        }
+    }
+}
+
+coro co-token (src) {
+    yield()
+    loop in iter(src), c {
+        ifs c {
+            in? ['}','(',')','[',']',',','$'] -> yield(:Fix [c, []])
+            else -> yield(c)
+        }
+    }
+}
+
+val x-char  = spawn co-char  ()
+val x-skip  = spawn co-skip  (x-char)
+val x-token = spawn co-token (x-skip)
+
+loop in iter(x-token), tk {
+    println(tk)
+}
+
+;;;
+func {>>|>>} (x1, x2) {
+    resume
+}
+
+val x = (coroutine(co-char) >>|>> coroutine(co-skip)) >>|>> coroutine(co-token)
+
+        val c = `:char $n.Number`
+        println(n, c)
+println(f-name, f)
+;;;
