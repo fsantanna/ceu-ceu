@@ -13,16 +13,13 @@ func tks-read () {
 }
 
 do :unnest {
-    var i   = 0
-    var N   = 0
-    val buf = [nil,nil]
+    var buf = nil
 
     func f-read () {
-        if N > 0 {
-            val a = buf[i]
-            set i = (i + 1) % 2
-            set N = N - 1
-            a
+        if buf {
+            val c = buf
+            set buf = nil
+            c
         } else {
             val b = `:number fgetc($f.Pointer)`
             if b == `:number EOF` {
@@ -34,10 +31,13 @@ do :unnest {
     }
 
     func f-unread (c) {
-        assert(N < 2)
-        set buf[i] = c
-        set i = (i + 1) % 2
-        set N = N + 1
+        assert(not buf)
+        set buf = c
+    }
+
+    func f-read-until (c) {
+        loop in iter(f-read), x until x==c {
+        }
     }
 }
 
@@ -48,6 +48,12 @@ val co-skip = spawn coro {
             in? [' ','\t','\n'] -> {}
             == ';' -> {
                 val c2 = f-read()
+                if c2 /= ';' {
+                    f-unread(c2)
+                    yield(';')
+                } else {
+                    f-read-until('\n')
+                }
             }
             else -> yield(c)
         }
