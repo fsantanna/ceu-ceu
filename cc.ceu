@@ -3,56 +3,77 @@ println(...)
 pass :Tk
 
 val f-name = ...[1]
-val f = `:pointer fopen($f-name.Dyn->Ncast.Vector.buf, "r")`
+val f-hand = `:pointer fopen($f-name.Dyn->Ncast.Vector.buf, "r")`
 defer {
-    `fclose($f.Pointer);`
-}
-
-val tks =
-func tks-read () {
+    `fclose($f-hand.Pointer);`
 }
 
 do :unnest {
-    var buf = nil
+    func letter? (c) {
+        `char c = $c.Char;`
+        `:bool ((c>='a' && c<='z') || (c>='A' && c<='Z'))`
+    }
+}
 
-    func f-read () {
+val KEYS = [
+]
+
+do :unnest {
+    var buf = nil
+    var cur = nil
+
+    func f-read-c () {
         if buf {
             val c = buf
             set buf = nil
             c
         } else {
-            val b = `:number fgetc($f.Pointer)`
-            if b == `:number EOF` {
+            val b = `:number fgetc($f-hand.Pointer)`
+            set cur = if b == `:number EOF` {
                 nil
             } else {
                 `:char $b.Number`
             }
+            cur
         }
     }
 
-    func f-unread (c) {
+    func f-unread () {
         assert(not buf)
-        set buf = c
+        set buf = cur
     }
 
-    func f-read-until (c) {
-        loop in iter(f-read), x until x==c {
+    func f-read-until-f (f-pred) {
+        loop in iter(f-read-c), x until f-pred(x) {
         }
+    }
+
+    func f-read-until-c (c) {
+        f-read-until-f \{ it == c }
+    }
+
+    func f-read-while-f (f-pred) {
+        f-read-until-f \{ not f-pred(it) }
+        f-unread()
+    }
+
+    func f-read-while-c (c) {
+        f-read-while-f \{ it == c }
     }
 }
 
 val co-skip = spawn coro {
     yield()
-    loop in iter(f-read), c {
+    loop in iter(f-read-c), c {
         ifs c {
             in? [' ','\t','\n'] -> {}
             == ';' -> {
-                val c2 = f-read()
+                val c2 = f-read-c()
                 if c2 /= ';' {
-                    f-unread(c2)
+                    f-unread()
                     yield(';')
                 } else {
-                    f-read-until('\n')
+                    f-read-until-c('\n')
                 }
             }
             else -> yield(c)
@@ -83,5 +104,5 @@ val x = (coroutine(co-char) >>|>> coroutine(co-skip)) >>|>> coroutine(co-token)
 
         val c = `:char $n.Number`
         println(n, c)
-println(f-name, f)
+println(f-name, f-hand)
 ;;;
