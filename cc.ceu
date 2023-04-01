@@ -13,6 +13,13 @@ do :unnest {
         `char c = $c.Char;`
         `:bool ((c>='a' && c<='z') || (c>='A' && c<='Z'))`
     }
+    func digit? (c) {
+        `char c = $c.Char;`
+        `:bool (c>='0' && c<='9')`
+    }
+    func letter-or-digit? (c) {
+        letter?(c) or digit?(c)
+    }
 }
 
 val KEYS = [
@@ -44,8 +51,11 @@ do :unnest {
     }
 
     func f-read-until-f (f-pred) {
+        val str = #[]
         loop in iter(f-read-c), x until f-pred(x) {
+            set str[+] = x
         }
+        move(str)
     }
 
     func f-read-until-c (c) {
@@ -53,8 +63,9 @@ do :unnest {
     }
 
     func f-read-while-f (f-pred) {
-        f-read-until-f \{ not f-pred(it) }
+        val v = f-read-until-f \{ not f-pred(it) }
         f-unread()
+        move(v)
     }
 
     func f-read-while-c (c) {
@@ -66,8 +77,8 @@ val co-skip = spawn coro {
     yield()
     loop in iter(f-read-c), c {
         ifs c {
-            in? [' ','\t','\n'] -> {}
-            == ';' -> {
+            it in? [' ','\t','\n'] -> {}
+            it == ';' -> {
                 val c2 = f-read-c()
                 if c2 /= ';' {
                     f-unread()
@@ -85,8 +96,16 @@ val co-token = spawn coro {
     yield()
     loop in iter(co-skip), c {
         ifs c {
-            in? ['}','(',')','[',']',',','$'] -> yield(:Tk.Fix [c, []])
-            else -> yield(c)
+            it in? ['}','(',')','[',']',',','$','\\']
+                -> yield(:Tk.Fix [it, []])
+            letter?(it) or (it=='_') -> {
+                f-unread()
+                yield(f-read-while-f \c{
+                    letter-or-digit?(c) or (c in? ['_','\'','?','!'])
+                })
+            }
+            else
+                -> yield(it)
         }
     }
 }
