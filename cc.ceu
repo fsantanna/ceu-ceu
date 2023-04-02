@@ -22,10 +22,10 @@ do :unnest {
     }
 }
 
-val KEYS = [
-]
+val KEYWORDS = vector-to-dict(^["keywords.ceu"])
 
-val POS = [1,1]
+data :Pos = [lin,col]
+var POS :Pos = [1,1]
 
 do :unnest {
     var buf = nil
@@ -44,14 +44,19 @@ do :unnest {
                 `:char $b.Number`
             }
             cur
-        } thus {
-            it
+        } thus c {
+            set POS = ((c == '\n') and [POS.lin+1,1]) or [POS.lin,POS.col+1]
+            c
         }
     }
 
     func f-unread-c () {
         assert(not buf)
-        set buf = cur
+        set buf  = cur
+        set POS  = (((cur == '\n') and [POS.lin-1,col]) or [POS.lin,POS.col-1])
+            where {
+                val col = 0 ;; TODO: should remember from previous line
+            }
     }
 
     func f-read-until-f (f-pred) {
@@ -100,20 +105,22 @@ val co-skip = spawn coro {
 val co-token = spawn coro {
     yield()
     loop in iter(co-skip), c {
-        ifs c {
-            it in? ['}','(',')','[',']',',','$','\\']
-                -> yield(:Tk.Fix [it,copy(POS)])
-            letter?(it) or (it=='_')
+        ifs {
+            c in? ['}','(',')','[',']',',','$','\\']
+                -> yield(:Tk.Fix [c,copy(POS)])
+            letter?(c) or (c=='_')
                 -> {
                     f-unread-c()
-                    f-read-while-f \c{
+                    val id = f-read-while-f \c{
                         letter-or-digit?(c) or (c in? ['_','\'','?','!'])
-                    } thus id {
-                        yield(:Tk.Id [id,copy(POS)])
+                    }
+                    ifs {
+                        id in? KEYWORDS -> yield(:Tk.Fix [string-to-tag(id),copy(POS)])
+                        else ->            yield(:Tk.Id  [id,copy(POS)])
                     }
                 }
             else
-                -> yield(:Tk.TODO [it,copy(POS)])
+                -> yield(:Tk.TODO [c,copy(POS)])
         }
     }
 }
