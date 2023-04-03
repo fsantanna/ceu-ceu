@@ -22,7 +22,8 @@ do :unnest {
     }
 }
 
-val KEYWORDS = vector-to-dict(^["keywords.ceu"])
+^["tokens.ceu"]
+;;val KEYWORDS = vector-to-dict(^["tokens.ceu"])
 
 data :Pos = [lin,col]
 var POS :Pos = [1,1]
@@ -110,20 +111,20 @@ func dict-any-key-f? (v, f) {
 val co-token = spawn coro {
     yield()
     loop in iter(co-skip), c {
+        val pos :tmp = copy(POS)
         ifs {
             c in? ['}','(',')','[',']',',','$','\\']
-                -> yield(:Tk.Fix [c,copy(POS)])
+                -> yield(:Tk.Fix.Sym [pos, to-string(c)])
             letter?(c) or (c=='_')
                 -> {
                     f-unread-c()
                     f-read-while-f \c{
                         letter-or-digit?(c) or (c in? ['_','\'','?','!'])
                     } thus id {
+                        val tag = string-to-tag(":Tk.Fix."++id)
                         ifs {
-                            dict-any-key-f?(KEYWORDS, \{it===id})
-                                -> yield(:Tk.Fix [string-to-tag(id),copy(POS)])
-                            else
-                                -> yield(:Tk.Id  [id,copy(POS)])
+                            tag  -> yield(tags([pos], tag, true))
+                            else -> yield(:Tk.Id [pos,id])
                         }
                     }
                 }

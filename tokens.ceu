@@ -1,3 +1,18 @@
+pass :Tk
+pass :Tk.Fix
+pass :Tk.Fix.val
+
+data :Tk = [pos] {
+    :Id  = [id]
+    :Fix = [] {
+        :Sym   = [sym]
+        :and   = []
+        :await = []
+        :val   = []
+    }
+}
+
+;;;
 [
     "and",
     "await",
@@ -46,3 +61,4 @@
     "with",
     "yield"
 ]
+;;;
