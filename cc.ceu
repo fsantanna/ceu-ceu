@@ -102,6 +102,11 @@ val co-skip = spawn coro {
     }
 }
 
+func dict-any-key-f? (v, f) {
+    loop in iter(v,:key), x {
+    } until f(x)
+}
+
 val co-token = spawn coro {
     yield()
     loop in iter(co-skip), c {
@@ -111,12 +116,15 @@ val co-token = spawn coro {
             letter?(c) or (c=='_')
                 -> {
                     f-unread-c()
-                    val id = f-read-while-f \c{
+                    f-read-while-f \c{
                         letter-or-digit?(c) or (c in? ['_','\'','?','!'])
-                    }
-                    ifs {
-                        id in? KEYWORDS -> yield(:Tk.Fix [string-to-tag(id),copy(POS)])
-                        else ->            yield(:Tk.Id  [id,copy(POS)])
+                    } thus id {
+                        ifs {
+                            dict-any-key-f?(KEYWORDS, \{it===id})
+                                -> yield(:Tk.Fix [string-to-tag(id),copy(POS)])
+                            else
+                                -> yield(:Tk.Id  [id,copy(POS)])
+                        }
                     }
                 }
             else
