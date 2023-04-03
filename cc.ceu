@@ -26,7 +26,7 @@ do :unnest {
 ;;val KEYWORDS = vector-to-dict(^["tokens.ceu"])
 
 data :Pos = [lin,col]
-var POS :Pos = [1,1]
+var POS :Pos = [1,0]
 
 do :unnest {
     var buf = nil
@@ -46,7 +46,7 @@ do :unnest {
             }
             cur
         } thus c {
-            set POS = ((c == '\n') and [POS.lin+1,1]) or [POS.lin,POS.col+1]
+            set POS = if (c == '\n') -> [POS.lin+1,0] -> [POS.lin,POS.col+1]
             c
         }
     }
@@ -54,7 +54,7 @@ do :unnest {
     func f-unread-c () {
         assert(not buf)
         set buf  = cur
-        set POS  = (((cur == '\n') and [POS.lin-1,col]) or [POS.lin,POS.col-1])
+        set POS  = if (cur == '\n') -> [POS.lin-1,col] -> [POS.lin,POS.col-1]
             where {
                 val col = 0 ;; TODO: should remember from previous line
             }
@@ -88,8 +88,8 @@ val co-skip = spawn coro {
     yield()
     loop in iter(f-read-c), c {
         ifs c {
-            it in? [' ','\t','\n'] -> {}
-            it == ';' -> {
+            it in? [' ','\t','\n'] {}
+            it == ';' {
                 val c2 = f-read-c()
                 if c2 /= ';' {
                     f-unread-c()
@@ -113,23 +113,34 @@ val co-token = spawn coro {
     loop in iter(co-skip), c {
         val pos :tmp = copy(POS)
         ifs {
-            c in? ['}','(',')','[',']',',','$','\\']
-                -> yield(:Tk.Fix.Sym [pos, to-string(c)])
-            letter?(c) or (c=='_')
-                -> {
-                    f-unread-c()
-                    f-read-while-f \c{
-                        letter-or-digit?(c) or (c in? ['_','\'','?','!'])
-                    } thus id {
-                        val tag = string-to-tag(":Tk.Fix."++id)
-                        ifs {
-                            tag  -> yield(tags([pos], tag, true))
-                            else -> yield(:Tk.Id [pos,id])
-                        }
+            c in? ['}','(',')','[',']',',','$','\\'] {
+                yield(:Tk.Fix.Sym [pos, to-string(c)])
+            }
+            c == ':' {               ;; TAG
+            }
+            digit?(c) {              ;; NUM
+                f-unread-c()
+                f-read-while-f \{
+                    (it == '.') or letter-or-digit?(it)
+                } thus num {
+                    yield(:Tk.Num [pos,num])
+                }
+            }
+            letter?(c) or (c=='_') { ;; KEY, ID
+                f-unread-c()
+                f-read-while-f \{
+                    letter-or-digit?(it) or (it in? ['_','\'','?','!'])
+                } thus id {
+                    val tag = string-to-tag(":Tk.Fix."++id)
+                    ifs {
+                        tag  -> yield(tags([pos], tag, true))
+                        else -> yield(:Tk.Id [pos,id])
                     }
                 }
-            else
-                -> yield(:Tk.TODO [c,copy(POS)])
+            }
+            else {
+                yield(:Tk.TODO [c,copy(POS)])
+            }
         }
     }
 }
