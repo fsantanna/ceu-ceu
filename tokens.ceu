@@ -5,8 +5,8 @@ pass :Tk.Fix.val
 data :Tk = [pos] {
     :Id  = [id]
     :Num = [num]
-    :Fix = [] {
-        :Sym   = [sym]
+    :Sym = [sym]
+    :Key = [] {
         :and   = []
         :await = []
         :val   = []

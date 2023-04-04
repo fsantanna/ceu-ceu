@@ -1,7 +1,5 @@
 println(...)
 
-pass :Tk
-
 val f-name = ...[1]
 val f-hand = `:pointer fopen($f-name.Dyn->Ncast.Vector.buf, "r")`
 defer {
@@ -54,7 +52,7 @@ do :unnest {
     func f-unread-c () {
         assert(not buf)
         set buf  = cur
-        set POS  = if (cur == '\n') -> [POS.lin-1,col] -> [POS.lin,POS.col-1]
+        set POS  = if (cur == '\n') -> [POS.lin-1,POS.col] -> [POS.lin,POS.col-1]
             where {
                 val col = 0 ;; TODO: should remember from previous line
             }
@@ -114,7 +112,7 @@ val co-token = spawn coro {
         val pos :tmp = copy(POS)
         ifs {
             c in? ['}','(',')','[',']',',','$','\\'] {
-                yield(:Tk.Fix.Sym [pos, to-string(c)])
+                yield(:Tk.Sym [pos, to-string(c)])
             }
             c == ':' {               ;; TAG
             }
@@ -131,7 +129,7 @@ val co-token = spawn coro {
                 f-read-while-f \{
                     letter-or-digit?(it) or (it in? ['_','\'','?','!'])
                 } thus id {
-                    val tag = string-to-tag(":Tk.Fix."++id)
+                    val tag = string-to-tag(":Tk.Key."++id)
                     ifs {
                         tag  -> yield(tags([pos], tag, true))
                         else -> yield(:Tk.Id [pos,id])
