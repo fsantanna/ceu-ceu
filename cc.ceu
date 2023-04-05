@@ -7,16 +7,16 @@ defer {
 }
 
 do :unnest {
-    func letter? (c) {
-        `char c = $c.Char;`
+    func letter? {
+        `char c = $it.Char;`
         `:bool ((c>='a' && c<='z') || (c>='A' && c<='Z'))`
     }
-    func digit? (c) {
-        `char c = $c.Char;`
+    func digit? {
+        `char c = $it.Char;`
         `:bool (c>='0' && c<='9')`
     }
-    func letter-or-digit? (c) {
-        letter?(c) or digit?(c)
+    func letter-or-digit? {
+        letter?(it) or digit?(it)
     }
 }
 
@@ -60,8 +60,8 @@ do :unnest {
 
     func f-read-until-f (f-pred) {
         val str = #[]
-        loop in iter(f-read-c), x until f-pred(x) {
-            set str[+] = x
+        loop in iter(f-read-c) until f-pred(it) {
+            set str[+] = it
         }
         move(str)
     }
@@ -91,7 +91,6 @@ val co-skip = spawn coro {
                 val c2 = f-read-c()
                 if c2 /= ';' {
                     f-unread-c()
-                    yield(';')
                 } else {
                     f-read-until-c('\n')
                 }
@@ -102,8 +101,8 @@ val co-skip = spawn coro {
 }
 
 func dict-any-key-f? (v, f) {
-    loop in iter(v,:key), x {
-    } until f(x)
+    loop in iter(v,:key) {
+    } until f(it)
 }
 
 val co-token = spawn coro {
@@ -115,6 +114,11 @@ val co-token = spawn coro {
                 yield(:Tk.Sym [pos, to-string(c)])
             }
             c == ':' {               ;; TAG
+                f-read-while-f \{
+                    letter-or-digit?(it)
+                } thus tag {
+                    yield(:Tk.Tag [pos, to-string(c) ++ tag])
+                }
             }
             digit?(c) {              ;; NUM
                 f-unread-c()
@@ -122,6 +126,14 @@ val co-token = spawn coro {
                     (it == '.') or letter-or-digit?(it)
                 } thus num {
                     yield(:Tk.Num [pos,num])
+                }
+            }
+            c in? OPERATORS {
+                f-unread-c()
+                f-read-while-f \{
+                    it in? OPERATORS
+                } thus op {
+                    yield(:Tk.Op [pos,op])
                 }
             }
             letter?(c) or (c=='_') { ;; KEY, ID
@@ -143,8 +155,8 @@ val co-token = spawn coro {
     }
 }
 
-loop in iter(co-token), tk {
-    println(tags(tk), tk)
+loop in iter(co-token) {
+    println(tags(it), it)
 }
 
 ;;;
