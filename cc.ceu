@@ -1,5 +1,24 @@
 println(...)
 
+val OPERATORS = iterable-to-dict ([
+    '+', '-', '*', '/', '>', '<', '=', '!', '|', '&', '~', '%', '#', '@'
+])
+
+data :Tk = [pos] {
+    :Id  = [id]
+    :Num = [num]
+    :Sym = [sym]
+    :Key = [] {
+        :and   = []
+        :await = []
+        :val   = []
+    }
+}
+
+data :Ex = [tk] {
+    :Dcl = [id]
+}
+
 val f-name = ...[1]
 val f-hand = `:pointer fopen($f-name.Dyn->Ncast.Vector.buf, "r")`
 defer {
@@ -10,7 +29,12 @@ defer {
 ^["file.ceu"]   ;;(f-hand)
 ^["tokens.ceu"]
 ^["lexer.ceu"]
+^["parser.ceu"]
 
-loop in iter(co-token) {
+val e1 = parser()
+println(e1)
+
+println("-=-=-=-=-")
+loop in iter(co-lexer) {
     println(tags(it), it)
 }

@@ -1,0 +1,27 @@
+export [parser]
+{
+    var tks = [nil, resume co-lexer()]
+
+    func tk-fetch-any () {
+        set tks = [tks.1, resume co-lexer()]
+        tks.1
+    }
+
+    func tk-check-tag (tag) {
+        if (tks.1 is? tag) -> tks.1 -> nil
+    }
+
+    func tk-fetch-tag (tag) {
+        tk-check-tag(tag) and tk-fetch-any()
+    }
+
+    func ex-prim () {
+        ifs {
+            tk-fetch-tag(:Tk.Key.val) -> :Ex.Dcl [copy(tks.0)]
+        }
+    }
+
+    func parser () {
+        ex-prim()
+    }
+}

@@ -1,22 +1,3 @@
-pass :Tk
-pass :Tk.Fix
-pass :Tk.Fix.val
-
-data :Tk = [pos] {
-    :Id  = [id]
-    :Num = [num]
-    :Sym = [sym]
-    :Key = [] {
-        :and   = []
-        :await = []
-        :val   = []
-    }
-}
-
-val OPERATORS = iterable-to-dict ([
-    '+', '-', '*', '/', '>', '<', '=', '!', '|', '&', '~', '%', '#', '@'
-])
-
 ;;;
 [
     "and",
