@@ -1,0 +1,77 @@
+export [co-token]
+{
+    val co-skip = spawn coro {
+        yield()
+        loop {
+            val c = f-read-c()
+        } until not c {
+            ifs c {
+                it in? [' ','\t','\n'] {}
+                it == ';' {
+                    val c2 = f-read-c()
+                    if c2 /= ';' {
+                        f-unread-c()
+                    } else {
+                        f-read-until-c('\n')
+                    }
+                }
+                else -> yield(c)
+            }
+        }
+    }
+
+    func dict-any-key-f? (v, f) {
+        loop in iter(v,:key) {
+        } until f(it)
+    }
+
+    val co-token = spawn coro {
+        yield()
+        loop in iter(co-skip), c {
+            val pos :tmp = copy(F-POS)
+            ifs {
+                c in? ['}','(',')','[',']',',','$','\\'] {
+                    yield(:Tk.Sym [pos, to-string(c)])
+                }
+                c == ':' {               ;; TAG
+                    f-read-while-f \{
+                        letter-or-digit?(it)
+                    } thus tag {
+                        yield(:Tk.Tag [pos, to-string(c) ++ tag])
+                    }
+                }
+                digit?(c) {              ;; NUM
+                    f-unread-c()
+                    f-read-while-f \{
+                        (it == '.') or letter-or-digit?(it)
+                    } thus num {
+                        yield(:Tk.Num [pos,num])
+                    }
+                }
+                c in? OPERATORS {
+                    f-unread-c()
+                    f-read-while-f \{
+                        it in? OPERATORS
+                    } thus op {
+                        yield(:Tk.Op [pos,op])
+                    }
+                }
+                letter?(c) or (c=='_') { ;; KEY, ID
+                    f-unread-c()
+                    f-read-while-f \{
+                        letter-or-digit?(it) or (it in? ['_','\'','?','!'])
+                    } thus id {
+                        val tag = string-to-tag(":Tk.Key."++id)
+                        ifs {
+                            tag  -> yield(tags([pos], tag, true))
+                            else -> yield(:Tk.Id [pos,id])
+                        }
+                    }
+                }
+                else {
+                    yield(:Tk.TODO [c,copy(F-POS)])
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+export [letter?, digit?, letter-or-digit?]
+{
+    func letter? {
+        `char c = $it.Char;`
+        `:bool ((c>='a' && c<='z') || (c>='A' && c<='Z'))`
+    }
+    func digit? {
+        `char c = $it.Char;`
+        `:bool (c>='0' && c<='9')`
+    }
+    func letter-or-digit? {
+        letter?(it) or digit?(it)
+    }
+}

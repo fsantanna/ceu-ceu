@@ -13,7 +13,7 @@ data :Tk = [pos] {
     }
 }
 
-val OPERATORS = vector-to-dict ([
+val OPERATORS = iterable-to-dict ([
     '+', '-', '*', '/', '>', '<', '=', '!', '|', '&', '~', '%', '#', '@'
 ])
 

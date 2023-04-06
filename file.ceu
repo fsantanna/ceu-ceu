@@ -1,0 +1,69 @@
+;;val f-hand = ...[0]
+
+export [
+    F-POS,
+    f-read-c, f-unread-c,
+    f-read-until-f, f-read-until-c,
+    f-read-while-f, f-read-while-c,
+] {
+    data :Pos = [lin,col]
+    var F-POS :Pos = [1,0]
+
+    var buf = nil
+    var cur = nil
+
+    func f-read-c () {
+        if buf {
+            val c = buf
+            set buf = nil
+            c
+        } else {
+            val b = `:number fgetc($f-hand.Pointer)`
+            set cur = if b == `:number EOF` {
+                nil
+            } else {
+                `:char $b.Number`
+            }
+            cur
+        } thus c {
+            set F-POS = if (c == '\n') -> [F-POS.lin+1,0] -> [F-POS.lin,F-POS.col+1]
+            c
+        }
+    }
+
+    func f-unread-c () {
+        assert(not buf)
+        set buf  = cur
+        set F-POS  = if (cur == '\n') -> [F-POS.lin-1,F-POS.col] -> [F-POS.lin,F-POS.col-1]
+            where {
+                val col = 0 ;; TODO: should remember from previous line
+            }
+    }
+
+    func f-read-until-f (f-pred) {
+        val str = #[]
+        loop {
+            val c = f-read-c()
+        } until f-pred(c) {
+            set str[+] = c
+        }
+        move(str)
+    }
+
+    func f-read-until-c (c) {
+        f-read-until-f \{ it == c }
+    }
+
+    func f-read-while-f (f-pred) {
+        defer {
+            f-unread-c()
+        }
+        f-read-until-f \{ not f-pred(it) }
+    }
+
+    func f-read-while-c (c) {
+        f-read-while-f \{ it == c }
+    }
+}
+
+
