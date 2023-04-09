@@ -1,18 +1,18 @@
-export [tks, tk-dump, tk-check, tk-fetch, tk-force] {
-    data :Tks = [pre :Tk, pos :Tk]
-    var tks :Tks = [nil, resume co-lexer()]
+export [tk-pre, tk-check, tk-fetch, tk-force] {
+    var tk-pre :Tk = resume co-lexer()
 
     func tk-read () {
-        set tks = [tks.pos, resume co-lexer()]
-        tks.pre
+        val pre = tk-pre
+        set tk-pre = resume co-lexer()
+        move(pre)
     }
 
     func tk-check (tag, str) {
         ifs {
-            (tks.pos is-not? tag) -> nil
-            (str == nil)          -> tks.pos
-            (tks.pos.str =/= str) -> nil
-            else                  -> tks.pos
+            (tk-pre is-not? tag) -> nil
+            (str == nil)         -> tk-pre
+            (tk-pre.str =/= str) -> nil
+            else                 -> tk-pre
         }
     }
 

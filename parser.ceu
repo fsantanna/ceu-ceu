@@ -3,13 +3,12 @@ export [parser]
     func ex-prim () {
         ifs {
             tk-fetch(:Tk.Key.val) {
-                val tk = tks.pre
+                val tk = tk-pre
                 val id :Tk.Id = tk-force(:Tk.Id)
                 val op :Tk.Op = tk-fetch(:Tk.Op, "=")
-                val src = op and ex-prim()
-                :Ex.Dcl [tk, id.str, src]
+                :Ex.Dcl [tk, id.str, op and ex-prim()]
             }
-            ;;else -> :Ex.TODO []
+            else -> :Ex.TODO []
         }
     }
 

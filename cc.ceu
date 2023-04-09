@@ -17,7 +17,8 @@ data :Tk = [pos,str] {
 }
 
 data :Ex = [tk] {
-    :Dcl = [id]
+    :TODO = []
+    :Dcl  = [id]
 }
 
 val f-name = ...[1]
