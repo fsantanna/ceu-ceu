@@ -63,7 +63,7 @@ export [co-lexer]
                     } thus id {
                         val tag = string-to-tag(":Tk.Key."++id)
                         ifs {
-                            tag  -> yield(tags([pos], tag, true))
+                            tag  -> yield(tags([pos,id], tag, true))
                             else -> yield(:Tk.Id [pos,id])
                         }
                     }

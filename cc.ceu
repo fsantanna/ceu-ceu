@@ -4,10 +4,11 @@ val OPERATORS = iterable-to-dict ([
     '+', '-', '*', '/', '>', '<', '=', '!', '|', '&', '~', '%', '#', '@'
 ])
 
-data :Tk = [pos] {
-    :Id  = [id]
-    :Num = [num]
-    :Sym = [sym]
+data :Tk = [pos,str] {
+    :Id  = []
+    :Num = []
+    :Sym = []
+    :Op  = []
     :Key = [] {
         :and   = []
         :await = []
@@ -27,8 +28,8 @@ defer {
 
 ^["char.ceu"]
 ^["file.ceu"]   ;;(f-hand)
-^["tokens.ceu"]
 ^["lexer.ceu"]
+^["tokens.ceu"]
 ^["parser.ceu"]
 
 val e1 = parser()

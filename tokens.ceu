@@ -1,50 +1,29 @@
-;;;
-[
-    "and",
-    "await",
-    "awaiting",
-    "broadcast",
-    "catch",
-    "coro",
-    "data",
-    "defer",
-    "do",
-    "else",
-    "enum",
-    "err",
-    "every",
-    "evt",
-    "false",
-    "func",
-    "if",
-    "ifs",
-    "in",
-    "in?",
-    "is?",
-    "is-not?",
-    "loop",
-    "nil",
-    "not",
-    "or",
-    "par",
-    "par-and",
-    "par-or",
-    "pass",
-    ;;"poly",
-    "pub",
-    "resume",
-    "resume-yield-all",
-    "set",
-    "spawn",
-    "task",
-    "thus",
-    "toggle",
-    "true",
-    "until",
-    "val",
-    "var",
-    "where",
-    "with",
-    "yield"
-]
-;;;
+export [tks, tk-dump, tk-check, tk-fetch, tk-force] {
+    data :Tks = [pre :Tk, pos :Tk]
+    var tks :Tks = [nil, resume co-lexer()]
+
+    func tk-read () {
+        set tks = [tks.pos, resume co-lexer()]
+        tks.pre
+    }
+
+    func tk-check (tag, str) {
+        ifs {
+            (tks.pos is-not? tag) -> nil
+            (str == nil)          -> tks.pos
+            (tks.pos.str =/= str) -> nil
+            else                  -> tks.pos
+        }
+    }
+
+    func tk-fetch (tag, str) {
+        tk-check(tag, str) and tk-read()
+    }
+
+    func tk-force (tag, str) {
+        if not tk-check(tag, str) {
+            throw("error")
+        }
+        tk-read()
+    }
+}
