@@ -6,8 +6,8 @@ export [co-lexer]
             val c = f-read-c()
         } until not c {
             ifs c {
-                it in? [' ','\t','\n'] {}
-                it == ';' {
+                c in? [' ','\t','\n'] {}
+                c == ';' {
                     val c2 = f-read-c()
                     if c2 /= ';' {
                         f-unread-c()

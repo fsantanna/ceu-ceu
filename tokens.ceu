@@ -1,18 +1,22 @@
-export [tk-pre, tk-check, tk-fetch, tk-force] {
-    var tk-pre :Tk = resume co-lexer()
+export [tk-eof?, tk-check, tk-fetch, tk-force, tk-dump] {
+    var nxt :Tk = resume co-lexer()
 
     func tk-read () {
-        val pre = tk-pre
-        set tk-pre = resume co-lexer()
-        move(pre)
+        val prv = nxt
+        set nxt = resume co-lexer()
+        move(prv)
+    }
+
+    func tk-eof? () {
+        nxt == nil
     }
 
     func tk-check (tag, str) {
         ifs {
-            (tk-pre is-not? tag) -> nil
-            (str == nil)         -> tk-pre
-            (tk-pre.str =/= str) -> nil
-            else                 -> tk-pre
+            (nxt is-not? tag) -> nil
+            (str == nil)      -> nxt
+            (nxt.str =/= str) -> nil
+            else              -> nxt
         }
     }
 
@@ -25,5 +29,9 @@ export [tk-pre, tk-check, tk-fetch, tk-force] {
             throw("error")
         }
         tk-read()
+    }
+
+    func tk-dump () {
+        println(nxt)
     }
 }

@@ -1,18 +1,77 @@
+func dump (x) {
+    println(x)
+    x
+}
+
 export [parser]
 {
+    var ex-expr
+
+    func list0 (f-sep, f-clo, f-ex) {
+        val l = #[]
+        loop until f-clo() {
+            set l[+] = f-ex()
+        } while f-sep()
+        move(l)
+    }
+
     func ex-prim () {
         ifs {
-            tk-fetch(:Tk.Key.val) {
-                val tk = tk-pre
+            tk = tk-fetch(:Tk.Key.val) {
                 val id :Tk.Id = tk-force(:Tk.Id)
                 val op :Tk.Op = tk-fetch(:Tk.Op, "=")
-                :Ex.Dcl [tk, id.str, op and ex-prim()]
+                :Ex.Dcl [tk, id.str, op and ex-expr()]
             }
-            else -> :Ex.TODO []
+            tk :Tk.Tag = tk-fetch(:Tk.Tag) {
+                :Ex.Tag [tk, tk.str]
+            }
+            tk :Tk.Id = tk-fetch(:Tk.Id) {
+                :Ex.Acc [tk, tk.str]
+            }
+            tk :Tk.Num = tk-fetch(:Tk.Num) {
+                :Ex.Num [tk, tk.str]
+            }
+            tk = tk-fetch(:Tk) {
+                :Ex.TODO [tk]
+            }
+            else -> throw(:bug)
         }
     }
 
+    func ex-sufs () {
+        var e = ex-prim()
+        loop  {
+            val ok = ifs {
+                tk = tk-fetch(:Tk.Sym,"(") {
+                    set e = :Ex.Call [
+                        tk, e,
+                        list0 (
+                            \{tk-fetch(:Tk.Sym,",")},
+                            \{tk-fetch(:Tk.Sym,")")},
+                            ex-expr
+                        )
+                    ]
+                }
+                else -> false
+            }
+        } while ok {
+        }
+        move(e)
+    }
+
+    set ex-expr = func () {
+        ex-sufs()
+    }
+
+    func ex-seq () {
+        val ret = #[]
+        loop until tk-check(:Tk.Sym,"}") or tk-eof?() {
+            set ret[+] = ex-expr()
+        }
+        move(ret)
+    }
+
     func parser () {
-        ex-prim()
+        ex-seq()
     }
 }

@@ -1,11 +1,10 @@
-println(...)
-
 val OPERATORS = iterable-to-dict ([
     '+', '-', '*', '/', '>', '<', '=', '!', '|', '&', '~', '%', '#', '@'
 ])
 
 data :Tk = [pos,str] {
     :Id  = []
+    :Tag = []
     :Num = []
     :Sym = []
     :Op  = []
@@ -18,7 +17,11 @@ data :Tk = [pos,str] {
 
 data :Ex = [tk] {
     :TODO = []
-    :Dcl  = [id]
+    :Dcl  = [id,src]
+    :Tag  = [tag]
+    :Acc  = [id]
+    :Num  = [num]
+    :Call = [proto, args]
 }
 
 val f-name = ...[1]
@@ -33,10 +36,37 @@ defer {
 ^["tokens.ceu"]
 ^["parser.ceu"]
 
-val e1 = parser()
-println(e1)
+val e = parser()
 
-println("-=-=-=-=-")
-loop in iter(co-lexer) {
-    println(tags(it), it)
+func string-rep (str, n) {
+    if n == 0 -> str -> (str ++ string-rep(str, n-1))
 }
+
+func map (xs, f) {
+    val ret = #[]
+    loop in iter(xs), x {
+        set ret[+] = f(x)
+    }
+    move(ret)
+}
+
+func ast-dump (e, spc) {
+    ifs {
+        (e is? :tuple) or (e is? :vector) {
+            println(string-rep(" ", spc))
+            println('[')
+            loop in iter(e), v {
+                ast-dump(v, spc+2)
+            }
+            println(string-rep(" ", spc))
+            println('[')
+        }
+        else {
+            println(string-rep(" ", spc))
+            println(e)
+        }
+    }
+}
+
+println(e)
+ast-dump(e)

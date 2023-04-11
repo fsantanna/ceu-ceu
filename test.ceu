@@ -1,8 +1,4 @@
 val x = :ok     ;; comentario
 ; 10 ;
 println(x);
-
-if
-loop/until
-catch
-ifs / case
+; 20 ;
