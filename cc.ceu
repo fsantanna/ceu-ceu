@@ -51,22 +51,23 @@ func map (xs, f) {
 }
 
 func ast-dump (e, spc) {
+    print(string-rep(" ", spc))
     ifs {
+        (e is? :vector) and (e[0] is? :char) -> println(e)
         (e is? :tuple) or (e is? :vector) {
-            println(string-rep(" ", spc))
-            println('[')
+            print('[')
+            println(tags(e) thus { if #it>0 -> it[0] -> "." })
             loop in iter(e), v {
-                ast-dump(v, spc+2)
+                ast-dump(v, spc+4)
             }
-            println(string-rep(" ", spc))
-            println('[')
+            print(string-rep(" ", spc))
+            println(']')
         }
         else {
-            println(string-rep(" ", spc))
             println(e)
         }
     }
 }
 
 println(e)
-ast-dump(e)
+ast-dump(e,0)
