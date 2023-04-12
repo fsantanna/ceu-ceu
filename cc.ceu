@@ -53,6 +53,7 @@ func map (xs, f) {
 func ast-dump (e, spc) {
     print(string-rep(" ", spc))
     ifs {
+        (e is? :Pos) or (e is? :Tk) -> println(e)
         (e is? :vector) and (e[0] is? :char) -> println(e)
         (e is? :tuple) or (e is? :vector) {
             print('[')

@@ -11,6 +11,7 @@ export [parser]
         val l = #[]
         loop until f-clo() {
             set l[+] = f-ex()
+        } until f-clo() {
         } while f-sep()
         move(l)
     }
@@ -46,7 +47,7 @@ export [parser]
                     set e = :Ex.Call [
                         tk, e,
                         list0 (
-                            \{tk-fetch(:Tk.Sym,",")},
+                            \{tk-force(:Tk.Sym,",")},
                             \{tk-fetch(:Tk.Sym,")")},
                             ex-expr
                         )
