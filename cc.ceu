@@ -30,16 +30,14 @@ defer {
     `fclose($f-hand.Pointer);`
 }
 
-^["char.ceu"]
-^["file.ceu"]   ;;(f-hand)
-^["lexer.ceu"]
-^["tokens.ceu"]
-^["parser.ceu"]
-
-val e = parser()
-
 func string-rep (str, n) {
     if n == 0 -> str -> (str ++ string-rep(str, n-1))
+}
+
+func for-each (col, f) {
+    loop in iter(col), v {
+        f(v)
+    }
 }
 
 func map (xs, f) {
@@ -50,12 +48,25 @@ func map (xs, f) {
     move(ret)
 }
 
+^["char.ceu"]
+^["file.ceu"]   ;;(f-hand)
+^["lexer.ceu"]
+^["tokens.ceu"]
+^["parser.ceu"]
+^["coder.ceu"]
+
+val e = parser()
+val s = coder(e)
+
 func ast-dump (e, spc) {
     print(string-rep(" ", spc))
-    ifs {
+    ifs e {
         (e is? :Pos) or (e is? :Tk) -> println(e)
         (e is? :vector) and (e[0] is? :char) -> println(e)
         (e is? :tuple) or (e is? :vector) {
+            if e is? :vector {
+                print('#')
+            }
             print('[')
             println(tags(e) thus { if #it>0 -> it[0] -> "." })
             loop in iter(e), v {

@@ -6,8 +6,8 @@ export [co-lexer]
             val c = f-read-c()
         } until not c {
             ifs c {
-                c in? [' ','\t','\n'] {}
-                c == ';' {
+                in? [' ','\t','\n'] {}
+                == ';' {
                     val c2 = f-read-c()
                     if c2 /= ';' {
                         f-unread-c()
@@ -29,11 +29,11 @@ export [co-lexer]
         yield()
         loop in iter(co-skip), c {
             val pos :tmp = copy(F-POS)
-            ifs {
-                c in? ['}','(',')','[',']',',','$','\\'] {
+            ifs c {
+                in? ['}','(',')','[',']',',','$','\\'] {
                     yield(:Tk.Sym [pos, to-string(c)])
                 }
-                c == ':' {               ;; TAG
+                == ':' {               ;; TAG
                     f-read-while-f \{
                         letter-or-digit?(it)
                     } thus tag {
@@ -48,7 +48,7 @@ export [co-lexer]
                         yield(:Tk.Num [pos,num])
                     }
                 }
-                c in? OPERATORS {
+                in? OPERATORS {
                     f-unread-c()
                     f-read-while-f \{
                         it in? OPERATORS

@@ -1,0 +1,10 @@
+func coder (e :Ex) {
+    ifs e {
+        is? :vector  -> for-each(e, coder)
+        is? :Ex.Tag  -> println(:Ex.Tag e.tag)
+        is? :Ex.Acc  -> println(:Ex.Acc e.id)
+        is? :Ex.Num  -> println(:Ex.Num e.num)
+        is? :Ex.Call -> for-each(:Ex.Call e.args, coder)
+        else -> println(:TODO)  
+    }
+}
